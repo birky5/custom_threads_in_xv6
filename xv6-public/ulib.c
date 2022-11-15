@@ -120,3 +120,7 @@ void lock_acquire(lock_t *mutex) {
 void lock_release(lock_t *mutex) {
   mutex->flag = 0; // set flag back to 0 to "unlock" it
 }
+
+int thread_create(void (*start_routine)(void *, void *), void *arg1, void *arg2) {
+  return -1;
+}
