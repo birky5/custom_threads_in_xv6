@@ -104,3 +104,19 @@ memmove(void *vdst, const void *vsrc, int n)
     *dst++ = *src++;
   return vdst;
 }
+
+void lock_init(lock_t *mutex) {
+  // 0 -> lock is available, 1 -> held
+  mutex->flag = 0;
+}
+
+void lock_acquire(lock_t *mutex) {
+  while (mutex->flag == 1)
+    ; // spin and wait while the lock is currently acquired
+
+  mutex->flag = 1; // set the flag to indicate it is locked
+}
+
+void lock_release(lock_t *mutex) {
+  mutex->flag = 0; // set flag back to 0 to "unlock" it
+}

@@ -1,5 +1,9 @@
 struct stat;
 struct rtcdate;
+// create type lock_t
+typedef struct __lock_t { 
+  int flag; 
+} lock_t;
 
 // system calls
 int fork(void);
@@ -23,6 +27,8 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack); // I think we remove the names UPDATE: NAMES NOT BE REMOVED
+int join(void **stack); // I think we remove the names UPDATE: NAMES NOT BE REMOVED
 
 // ulib.c
 int stat(const char*, struct stat*);
@@ -37,3 +43,6 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+void lock_init(lock_t *);
+void lock_acquire(lock_t *);
+void lock_release(lock_t *);
