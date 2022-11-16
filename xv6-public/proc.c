@@ -160,18 +160,23 @@ growproc(int n)
 {
   uint sz;
   struct proc *curproc = myproc();
+  struct proc *p;
 
   sz = curproc->sz;
   if(n > 0){
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
-      // loop through ptable to grow all the processes stack size as well
-      // set all child process sizes equal to sz
       return -1;
   } else if(n < 0){
     if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
       return -1;
   }
+  // loop through ptable to grow all the processes stack size as well
+  // set all child process sizes equal to sz
   curproc->sz = sz;
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    p->size = curproc->sz;
+  }
   switchuvm(curproc);
   return 0;
 }
