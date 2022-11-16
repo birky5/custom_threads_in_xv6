@@ -164,6 +164,8 @@ growproc(int n)
   sz = curproc->sz;
   if(n > 0){
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
+      // loop through ptable to grow all the processes stack size as well
+      // set all child process sizes equal to sz
       return -1;
   } else if(n < 0){
     if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
@@ -534,9 +536,47 @@ procdump(void)
 }
 
 int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack) {
-  return -1;
+  int i, pid;
+  struct proc *np;
+  struct proc *curproc = myproc();
+
+  // Allocate process.
+  if((np = allocproc()) == 0){
+    return -1;
+  }
+
+  np->pgdir = curproc->pgdir; // my added line
+  np->sz = curproc->sz;
+  np->parent = curproc->parent;
+  *np->tf = *curproc->tf;
+
+  // Setup user stacks and registers
+  // np->tf->eip
+  // np->tf->esp
+
+  // Clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
+
+  for(i = 0; i < NOFILE; i++)
+    if(curproc->ofile[i])
+      np->ofile[i] = filedup(curproc->ofile[i]);
+  np->cwd = idup(curproc->cwd);
+
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+
+  pid = np->pid;
+
+  acquire(&ptable.lock);
+
+  np->state = RUNNABLE;
+
+  release(&ptable.lock);
+
+  return pid;
 }
 
 int join(void **stack) {
+  cprintf("in proc.c join function\n");
+  cprintf("Address of join_stack in proc.c: %p\n", &stack);
   return -1;
 }

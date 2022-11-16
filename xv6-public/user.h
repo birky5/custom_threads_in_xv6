@@ -2,7 +2,7 @@ struct stat;
 struct rtcdate;
 // create type lock_t
 typedef struct __lock_t { 
-  int flag; 
+  uint flag; 
 } lock_t;
 
 // system calls
@@ -47,3 +47,4 @@ void lock_init(lock_t *);
 void lock_acquire(lock_t *);
 void lock_release(lock_t *);
 int thread_create(void (*start_routine)(void *, void *), void *arg1, void *arg2);
+int thread_join();

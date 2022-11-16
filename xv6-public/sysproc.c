@@ -95,5 +95,10 @@ int sys_clone(void) {
 }
 
 int sys_join(void) {
-  return -1;
+  cprintf("in sysproc.c sys_join function\n");
+  char* inUserStack;
+
+  argptr(0, (void*)&inUserStack, sizeof(void*));
+  cprintf("Address of join_stack in sysproc.c: %p\n", (void*)&inUserStack);
+  return join((void*)inUserStack);
 }
