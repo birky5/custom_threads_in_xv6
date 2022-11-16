@@ -91,14 +91,24 @@ sys_uptime(void)
 }
 
 int sys_clone(void) {
-  return -1;
+  int fcn;
+	int arg1;
+	int arg2;
+	int stack;
+
+	if ((argint(0, &fcn) < 0 || argint(1, &arg1) < 0 || argint(2, &arg2) < 0 || argint(3, &stack) < 0)) {
+		return -1;
+	}
+	//cprintf("here in sys_clone\n");
+	return clone((void *)fcn, (void *)arg1, (void *)arg2, (void *)stack);
 }
 
 int sys_join(void) {
-  cprintf("in sysproc.c sys_join function\n");
-  char* inUserStack;
+  //cprintf("in sysproc.c sys_join function\n");
+  void** inUserStack;
 
-  argptr(0, (void*)&inUserStack, sizeof(void*));
-  cprintf("Address of join_stack in sysproc.c: %p\n", (void*)&inUserStack);
-  return join((void*)inUserStack);
+  argptr(0, (void*)&inUserStack, sizeof(void**));
+  //cprintf("Address of join_stack in sysproc.c: %p\n", (void*)&inUserStack);
+  return join(inUserStack);
+  //return -1;
 }
