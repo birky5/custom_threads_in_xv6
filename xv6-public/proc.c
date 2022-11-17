@@ -160,7 +160,7 @@ growproc(int n)
 {
   uint sz;
   struct proc *curproc = myproc();
-  struct proc *p;
+   struct proc *p; // I added
 
   sz = curproc->sz;
   if(n > 0){
@@ -170,13 +170,12 @@ growproc(int n)
     if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
       return -1;
   }
-  // loop through ptable to grow all the processes stack size as well
-  // set all child process sizes equal to sz
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+	    if (curproc->pgdir == p->pgdir) {
+		    curproc->sz = p->sz;
+	    }
+    }
   curproc->sz = sz;
-
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    p->sz = curproc->sz;
-  }
   switchuvm(curproc);
   return 0;
 }
@@ -288,7 +287,7 @@ wait(void)
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc)
+      if(p->parent != curproc  || p->pgdir == curproc->pgdir)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
@@ -541,20 +540,21 @@ procdump(void)
 }
 
 int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack) {
-  int i, pid;
-	int fake_pc;
+	
+	int i, pid;
+        int fake_pc;
 	struct proc *np;
 	struct proc *curproc = myproc();
-  
-  if ((uint)stack % PGSIZE != 0) {
-    // Stack must be page aligned
-    return -1;
-  }
 
-  if ((uint)stack + PGSIZE > curproc->sz) {
-    // Stack cannot be bigger than process size
-    return -1;
-  }
+	if ((uint)stack % PGSIZE != 0) {
+    		// Stack must be page aligned
+    		return -1;
+  	}
+
+  	if ((uint)stack + PGSIZE > curproc->sz) {
+    		// Stack cannot be bigger than process size
+    		return -1;
+  	}
 
 	int top_stack = (int)stack + PGSIZE; // top of stack
 	
@@ -562,65 +562,84 @@ int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack) {
 
 	// allocate a slot in the process table
 	if ((np = allocproc()) == 0) 
-	  return -1;
+		return -1;
 
 	// part 1.
 	// do not want to create copy of new addr space
-	np->pgdir = curproc->pgdir;
-	np->sz = curproc->sz;
-  np->parent = curproc;
-  *np->tf = *curproc->tf;
+	  np->pgdir = curproc->pgdir;
+	  np->sz = curproc->sz;
+          np->parent = curproc;
+          *np->tf = *curproc->tf;
 
-	// part 2. needs to be PGSIZE and 
-	// what we need to do now:
-	// push arg1, arg2, fake PC onto stack 
+	  // part 2. needs to be PGSIZE and 
+	  // what we need to do now:
+	  // push arg1, arg2, fake PC onto stack 
 
-	int arg1_spot, arg2_spot, fake_pc_spot;
-	arg1_spot = top_stack - 4;
-	arg2_spot = top_stack - 8;
-	fake_pc_spot = top_stack - 12;
-	// push arg2
-	memmove((void*)arg1_spot, &arg2, 4);
-	// push arg1
-	memmove((void*)arg2_spot, &arg1, 4);
-	// push fake PC onto stack
-	memmove((void*)fake_pc_spot, &fake_pc, 4);
+	  int arg1_spot, arg2_spot, fake_pc_spot;
+	  arg1_spot = top_stack - 4;
+	  arg2_spot = top_stack - 8;
+	  fake_pc_spot = top_stack - 12;
 
-	// set stack pointer to start of stack
-	np->tf->esp = (int)stack; 
-	np->tf->ebp = np->tf->esp; // set base pointer to stack pointer
-	np->tf->eip = (int)fcn; // start executing at fcn
+	  // push arg2
+	  memmove((void*)arg1_spot, &arg2, 4);
 
-	// rest of fork method
-	// Clear %eax so that fork returns 0 in the child.
-	np->tf->eax = 0;
+	  // push arg1
+	  memmove((void*)arg2_spot, &arg1, 4);
 
+	  // push fake PC onto stack
+	  memmove((void*)fake_pc_spot, &fake_pc, 4);
 
-	for(i = 0; i < NOFILE; i++)
-    if(curproc->ofile[i])
-      np->ofile[i] = filedup(curproc->ofile[i]);
-  
-  np->cwd = idup(curproc->cwd);
-  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
-  pid = np->pid;
+	  // set stack pointer to start of stack
+	  np->tf->esp = (uint)stack;
+	  np->stack = stack;
 
-  acquire(&ptable.lock);
+	  np->tf->esp = np->tf->esp + (PGSIZE - 12); 
 
-  np->state = RUNNABLE;
+	  np->tf->ebp = np->tf->esp; // set base pointer to stack pointer
 
-  release(&ptable.lock);
+	  np->tf->eip = (uint)fcn; // start executing at fcn
 
-	return pid;
+	  // rest of fork method
+	   // Clear %eax so that fork returns 0 in the child.
+	   np->tf->eax = 0;
+
+	   for(i = 0; i < NOFILE; i++)
+    	   	if(curproc->ofile[i])
+      	        	np->ofile[i] = filedup(curproc->ofile[i]);
+  	   np->cwd = idup(curproc->cwd);
+
+  	   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+
+  	   pid = np->pid;
+
+  	   acquire(&ptable.lock);
+
+  	   np->state = RUNNABLE;
+
+           release(&ptable.lock);
+
+	   return pid;
+
+	// want we want to do:
+	// 1. we want the new child thread to have the same addr.space as parent so do not make new copy of pgdir
+	// 2.
+	// set up kernel stack so when clone() returns child(new thread), it runs on the
+	// user stack passed into clone. fcn is starting point of child thread(eip)
+	// how to do this:
+	// 1 -> need to push (add )arguments onto stack
+	// how? what does push do?
+	// push decrements the esp register by the size of pushed value
+	// push = esp - sizeof(arg)
+	// need to do this for arg1, arg2, and fake return PC
 }
-
 int join(void **stack) {
   // basically a copy of the wait function, except in the if statement
-  // if(p->state == ZOMBIE) removed the line that also clears the 
+  // if(p->state == ZOMBIE) removed the line that also clears the
   // page directory from virtual memory
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
-  
+
   acquire(&ptable.lock);
   for(;;){
     // Scan through table looking for exited children.
@@ -639,6 +658,8 @@ int join(void **stack) {
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
+	      *stack = p->stack;
+	      p->stack = 0;
         release(&ptable.lock);
         return pid;
       }

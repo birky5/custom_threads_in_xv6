@@ -1,8 +1,8 @@
 struct stat;
 struct rtcdate;
 // create type lock_t
-typedef struct __lock_t { 
-  uint flag; 
+typedef struct __lock_t {
+	uint flag;
 } lock_t;
 
 // system calls
@@ -27,8 +27,8 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack); // I think we remove the names UPDATE: NAMES NOT BE REMOVED
-int join(void **stack); // I think we remove the names UPDATE: NAMES NOT BE REMOVED
+int clone(void(*fcn)(void*,void*), void*, void*, void*); // I added
+int join(void**); // I added
 
 // ulib.c
 int stat(const char*, struct stat*);

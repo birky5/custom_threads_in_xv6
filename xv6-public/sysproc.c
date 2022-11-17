@@ -13,6 +13,47 @@ sys_fork(void)
   return fork();
 }
 
+// I added to project
+///////////////////////////////
+// edit this
+int
+sys_clone(void)
+{
+	int fcn;
+	int arg1;
+	int arg2;
+	int stack;
+
+	if ((argint(0, &fcn) < 0 || argint(1, &arg1) < 0 || argint(2, &arg2) < 0 || argint(3, &stack) < 0)) {
+		return -1;
+	}
+	
+	return clone((void *)fcn, (void *)arg1, (void *)arg2, (void *)stack);
+}
+
+// I have not implemented
+
+int sys_join(void) {
+	void** inUserStack;
+
+	 if((argptr(0, (void *)&inUserStack, sizeof(void**)) <  0)) {
+          return -1;
+  }
+//	argptr(0, (void*)&inUserStack, sizeof(void**));
+	return join(inUserStack);
+}
+
+/*int sys_join(void)
+{
+	void **stack; // parameter we want
+	int get_stack; 
+	get_stack = argint(0, &get_stack); // get stack
+	stack = (void**)get_stack; // set stack 
+	return join(stack); 
+}
+*/
+
+//////////////////////////////
 int
 sys_exit(void)
 {
@@ -88,27 +129,4 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
-}
-
-int sys_clone(void) {
-  int fcn;
-	int arg1;
-	int arg2;
-	int stack;
-
-	if ((argint(0, &fcn) < 0 || argint(1, &arg1) < 0 || argint(2, &arg2) < 0 || argint(3, &stack) < 0)) {
-		return -1;
-	}
-	//cprintf("here in sys_clone\n");
-	return clone((void *)fcn, (void *)arg1, (void *)arg2, (void *)stack);
-}
-
-int sys_join(void) {
-  //cprintf("in sysproc.c sys_join function\n");
-  void** inUserStack;
-
-  argptr(0, (void*)&inUserStack, sizeof(void**));
-  //cprintf("Address of join_stack in sysproc.c: %p\n", (void*)&inUserStack);
-  return join(inUserStack);
-  //return -1;
 }

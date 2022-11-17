@@ -108,18 +108,20 @@ memmove(void *vdst, const void *vsrc, int n)
 }
 
 void lock_init(lock_t *mutex) {
-  // 0 -> lock is available, 1 -> held
-  mutex->flag = 0;
+	// 0 -> lock is available, 1 -> held
+	mutex->flag = 0;
 }
 
 void lock_acquire(lock_t *mutex) {
-  while (xchg(&(mutex->flag), 1) != 0)
-    ; // atomically spin and wait while the lock is currently acquired
+	while (xchg(&mutex->flag, 1) != 0);
+  //while (xchg(&(mutex->flag), 1) != 0)
+   // ; // atomically spin and wait while the lock is currently acquired
 
   mutex->flag = 1; // set the flag to indicate it is locked
 }
 
 void lock_release(lock_t *mutex) {
+	xchg(&mutex->flag, 0);
   mutex->flag = 0; // set flag back to 0 to "unlock" it
 }
 
@@ -135,12 +137,13 @@ int thread_create(void (*start_routine)(void *, void *), void *arg1, void *arg2)
   }
   // above if else statement checks if the stack is page aligned,
   // if it is not it adds the amount to the pointer to get it page aligned
-  
+
+  //return clone(start_routine, arg1, arg2, initalStack);
   return clone(start_routine, arg1, arg2, userStack);
 }
 
-// Per the project spec: which calls the underlying join() system 
-// call, frees the user stack, and then returns. It returns the 
+// Per the project spec: which calls the underlying join() system
+// call, frees the user stack, and then returns. It returns the
 // waited-for PID (when successful), -1 otherwise.
 int thread_join() {
   // join returns the process ID or -1, and this function also
