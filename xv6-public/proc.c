@@ -170,11 +170,13 @@ growproc(int n)
     if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
       return -1;
   }
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-	    if (curproc->pgdir == p->pgdir) {
-		    curproc->sz = p->sz;
-	    }
-    }
+  
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+	  if (curproc->pgdir == p->pgdir) {
+		  p->sz = sz;
+	  }
+  }
+
   curproc->sz = sz;
   switchuvm(curproc);
   return 0;
