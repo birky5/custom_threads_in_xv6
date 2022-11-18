@@ -126,7 +126,7 @@ void lock_release(lock_t *mutex) {
 }
 
 int thread_create(void (*start_routine)(void *, void *), void *arg1, void *arg2) {
-  void* initalStack = malloc(4096); // page is 4kb or 4096
+  void* initalStack = malloc(4096 * 2); // page is 4kb or 4096
   if (initalStack == 0) { return -1; } // if malloc failed then we return -1
 
   // Need to check page alignment

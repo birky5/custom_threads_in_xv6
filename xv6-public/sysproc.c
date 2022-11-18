@@ -13,9 +13,6 @@ sys_fork(void)
   return fork();
 }
 
-// I added to project
-///////////////////////////////
-// edit this
 int
 sys_clone(void)
 {
@@ -31,29 +28,16 @@ sys_clone(void)
 	return clone((void *)fcn, (void *)arg1, (void *)arg2, (void *)stack);
 }
 
-// I have not implemented
-
 int sys_join(void) {
 	void** inUserStack;
 
 	 if((argptr(0, (void *)&inUserStack, sizeof(void**)) <  0)) {
           return -1;
   }
-//	argptr(0, (void*)&inUserStack, sizeof(void**));
+
 	return join(inUserStack);
 }
 
-/*int sys_join(void)
-{
-	void **stack; // parameter we want
-	int get_stack; 
-	get_stack = argint(0, &get_stack); // get stack
-	stack = (void**)get_stack; // set stack 
-	return join(stack); 
-}
-*/
-
-//////////////////////////////
 int
 sys_exit(void)
 {
