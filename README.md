@@ -1,7 +1,7 @@
 
 # Kernel Threads
 
-Project description copied from the offical ostep-projects repository [here](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/concurrency-xv6-threads)
+Project description copied from the offical ostep-projects repository [here](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/concurrency-xv6-threads).
 
 Differences from our project and this project description: we are just creating a simple spin lock.
 
